@@ -1,17 +1,29 @@
+import Slider from '@react-native-community/slider';
 import IVSPlayer, { IVSPlayerRef } from 'amazon-ivs-react-native-player';
 import { MotiView } from 'moti';
 import { useRef, useState } from 'react';
 import { GestureResponderEvent, StatusBar, TouchableWithoutFeedback, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Text from '../components/common/text';
+import { formatTime, getMetrics } from '../helpers/utils';
 
 export default function Index() {
   const playerRef = useRef<IVSPlayerRef>(null);
+  const [durationPlayed, setDurationPlayed] = useState<number>(0);
+  const [totalDuration, setTotalDuration] = useState<number>(0);
   const [IVSPlayerStates, setIVSPlayerStates] = useState<Record<string, boolean>>({
     paused: true,
     muted: false,
     showControls: true,
   });
+
+  const handleDurationChange = (duration: number | null) => {
+    setTotalDuration(duration ?? 0);
+  }
+
+  const handleProgressChange = (progress: number) => {
+    setDurationPlayed(progress);
+  }
 
   const handleIVSPlayerControlsChanged = (key: keyof typeof IVSPlayerStates, value: boolean) => {
     setIVSPlayerStates(prev => ({
@@ -48,6 +60,10 @@ export default function Index() {
     handleAutoHideControls();
   }
 
+  const handleSlidingStart = () => { }
+
+  const handleSlidingComplete = () => { }
+
   return (
     <SafeAreaView edges={[]} className={`flex-1 items-center bg-black justify-center`}>
       <StatusBar
@@ -63,12 +79,8 @@ export default function Index() {
           flex: 1,
           width: "100%",
         }}
-        onDurationChange={(duration) => {
-          // console.log("Duration information:", duration);
-        }}
-        onProgress={(progress) => {
-          // console.log("Progress information:", Math.round(progress));
-        }}
+        onDurationChange={handleDurationChange}
+        onProgress={handleProgressChange}
       >
         <TouchableWithoutFeedback onPress={handleBgPressed}>
           <View className={`h-full flex items-end justify-between`}>
@@ -94,7 +106,34 @@ export default function Index() {
                 opacity: IVSPlayerStates.showControls ? 1 : 0,
                 translateY: IVSPlayerStates.showControls ? 0 : 40
               }}
+              style={{
+                gap: getMetrics(8),
+              }}
             >
+              <View className={`px-3`} style={{ gap: 5, width: "100%" }}>
+                <View className={`flex flex-row w-full px-6 items-center justify-between`}>
+                  <Text size='13' className={`text-white`}>
+                    --:--
+                  </Text>
+
+                  <Text size='13' className={`text-white`}>
+                    {formatTime(durationPlayed)}
+                  </Text>
+                </View>
+
+                <Slider
+                  value={totalDuration === Infinity ? 100 : durationPlayed}
+                  disabled={!totalDuration || totalDuration === Infinity}
+                  minimumValue={totalDuration === Infinity ? 40 : 0}
+                  maximumValue={totalDuration === Infinity ? 100 : totalDuration}
+                  style={{
+                    width: "100%",
+                  }}
+                  onSlidingStart={handleSlidingStart}
+                  onSlidingComplete={handleSlidingComplete}
+                />
+              </View>
+
               <TouchableWithoutFeedback onPress={handleTogglePlayPause}>
                 <View className={`w-14 h-14 flex items-center justify-center rounded-full bg-[#00f]`}>
                   <Text className={`text-white`}>
