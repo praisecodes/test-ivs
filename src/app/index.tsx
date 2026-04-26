@@ -7,13 +7,23 @@ import Text from '../components/common/text';
 
 export default function Index() {
   const playerRef = useRef<IVSPlayerRef>(null);
-  const [showControls, setShowControls] = useState<boolean>(true);
-  const [paused, setPaused] = useState<boolean>(true);
+  const [IVSPlayerStates, setIVSPlayerStates] = useState<Record<string, boolean>>({
+    paused: true,
+    muted: false,
+    showControls: true,
+  });
+
+  const handleIVSPlayerControlsChanged = (key: keyof typeof IVSPlayerStates, value: boolean) => {
+    setIVSPlayerStates(prev => ({
+      ...prev,
+      [key]: value,
+    }));
+  }
 
   const handleAutoHideControls = () => {
     const controlsTimeout = setTimeout(() => {
-      if (!showControls) return;
-      setShowControls(false);
+      if (!IVSPlayerStates.showControls) return;
+      handleIVSPlayerControlsChanged("showControls", false);
       clearTimeout(controlsTimeout);
     }, (2500));
   }
@@ -23,18 +33,18 @@ export default function Index() {
 
     if (!playerRef.current) return;
 
-    if (paused) {
+    if (IVSPlayerStates.paused) {
       playerRef.current.play();
       handleAutoHideControls();
     } else {
       playerRef.current.pause();
     }
 
-    setPaused(prev => !prev);
+    handleIVSPlayerControlsChanged("paused", !IVSPlayerStates["paused"]);
   }
 
   const handleBgPressed = () => {
-    setShowControls(prev => !prev);
+    handleIVSPlayerControlsChanged("showControls", !IVSPlayerStates["showControls"]);
     handleAutoHideControls();
   }
 
@@ -46,14 +56,12 @@ export default function Index() {
         hidden
       />
       <IVSPlayer
+        {...IVSPlayerStates}
         ref={playerRef}
         streamUrl="https://fcc3ddae59ed.us-west-2.playback.live-video.net/api/video/v1/us-west-2.893648527354.channel.DmumNckWFTqz.m3u8"
-        // autoplay={false}
-        paused={paused}
         style={{
           flex: 1,
           width: "100%",
-          // height: HEIGHT
         }}
         onDurationChange={(duration) => {
           // console.log("Duration information:", duration);
@@ -68,8 +76,8 @@ export default function Index() {
               className={`bg-[#00000032] w-full py-4 flex flex-row`}
               from={{ opacity: 1 }}
               animate={{
-                opacity: showControls ? 1 : 0,
-                translateY: showControls ? 0 : -100
+                opacity: IVSPlayerStates.showControls ? 1 : 0,
+                translateY: IVSPlayerStates.showControls ? 0 : -100
               }}
             >
               <SafeAreaView>
@@ -83,14 +91,14 @@ export default function Index() {
               className={`w-full py-3 flex items-center justify-center bg-transparent`}
               from={{ opacity: 1 }}
               animate={{
-                opacity: showControls ? 1 : 0,
-                translateY: showControls ? 0 : 40
+                opacity: IVSPlayerStates.showControls ? 1 : 0,
+                translateY: IVSPlayerStates.showControls ? 0 : 40
               }}
             >
               <TouchableWithoutFeedback onPress={handleTogglePlayPause}>
                 <View className={`w-14 h-14 flex items-center justify-center rounded-full bg-[#00f]`}>
                   <Text className={`text-white`}>
-                    {paused ? "Pl" : "Pu"}
+                    {IVSPlayerStates.paused ? "Pl" : "Pu"}
                   </Text>
                 </View>
               </TouchableWithoutFeedback>
