@@ -10,6 +10,14 @@ export default function Index() {
   const [showControls, setShowControls] = useState<boolean>(true);
   const [paused, setPaused] = useState<boolean>(true);
 
+  const handleAutoHideControls = () => {
+    const controlsTimeout = setTimeout(() => {
+      if (!showControls) return;
+      setShowControls(false);
+      clearTimeout(controlsTimeout);
+    }, (2500));
+  }
+
   const handleTogglePlayPause = async (e: GestureResponderEvent) => {
     e.preventDefault();
 
@@ -17,11 +25,7 @@ export default function Index() {
 
     if (paused) {
       playerRef.current.play();
-
-      const controlsTimeout = setTimeout(() => {
-        if (showControls) setShowControls(false);
-        clearTimeout(controlsTimeout);
-      }, 2500);
+      handleAutoHideControls();
     } else {
       playerRef.current.pause();
     }
@@ -31,10 +35,11 @@ export default function Index() {
 
   const handleBgPressed = () => {
     setShowControls(prev => !prev);
+    handleAutoHideControls();
   }
 
   return (
-    <SafeAreaView edges={[]} className={`flex-1 items-center justify-center`}>
+    <SafeAreaView edges={[]} className={`flex-1 items-center bg-black justify-center`}>
       <StatusBar
         animated
         showHideTransition={'slide'}
