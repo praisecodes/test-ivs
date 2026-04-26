@@ -1,23 +1,36 @@
 import IVSPlayer, { IVSPlayerRef } from 'amazon-ivs-react-native-player';
+import { MotiView } from 'moti';
 import { useRef, useState } from 'react';
-import { StatusBar, TouchableWithoutFeedback, View } from 'react-native';
+import { GestureResponderEvent, StatusBar, TouchableWithoutFeedback, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Text from '../components/common/text';
 
 export default function Index() {
   const playerRef = useRef<IVSPlayerRef>(null);
+  const [showControls, setShowControls] = useState<boolean>(true);
   const [paused, setPaused] = useState<boolean>(true);
 
-  const handleTogglePlayPause = async () => {
+  const handleTogglePlayPause = async (e: GestureResponderEvent) => {
+    e.preventDefault();
+
     if (!playerRef.current) return;
 
     if (paused) {
       playerRef.current.play();
+
+      const controlsTimeout = setTimeout(() => {
+        if (showControls) setShowControls(false);
+        clearTimeout(controlsTimeout);
+      }, 2500);
     } else {
       playerRef.current.pause();
     }
 
     setPaused(prev => !prev);
+  }
+
+  const handleBgPressed = () => {
+    setShowControls(prev => !prev);
   }
 
   return (
@@ -44,17 +57,41 @@ export default function Index() {
           // console.log("Progress information:", Math.round(progress));
         }}
       >
-        <View className={`h-full flex items-end justify-end`}>
-          <View className={`w-full py-3 flex items-center justify-center bg-transparent`}>
-            <TouchableWithoutFeedback onPress={handleTogglePlayPause}>
-              <View className={`w-14 h-14 flex items-center justify-center rounded-full bg-white`}>
-                <Text>
-                  {paused ? "Pa" : "Pl"}
+        <TouchableWithoutFeedback onPress={handleBgPressed}>
+          <View className={`h-full flex items-end justify-between`}>
+            <MotiView
+              className={`bg-[#00000032] w-full py-4 flex flex-row`}
+              from={{ opacity: 1 }}
+              animate={{
+                opacity: showControls ? 1 : 0,
+                translateY: showControls ? 0 : -100
+              }}
+            >
+              <SafeAreaView>
+                <Text size='15' className={`text-white`}>
+                  A test stream
                 </Text>
-              </View>
-            </TouchableWithoutFeedback>
+              </SafeAreaView>
+            </MotiView>
+
+            <MotiView
+              className={`w-full py-3 flex items-center justify-center bg-transparent`}
+              from={{ opacity: 1 }}
+              animate={{
+                opacity: showControls ? 1 : 0,
+                translateY: showControls ? 0 : 40
+              }}
+            >
+              <TouchableWithoutFeedback onPress={handleTogglePlayPause}>
+                <View className={`w-14 h-14 flex items-center justify-center rounded-full bg-[#00f]`}>
+                  <Text className={`text-white`}>
+                    {paused ? "Pl" : "Pu"}
+                  </Text>
+                </View>
+              </TouchableWithoutFeedback>
+            </MotiView>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </IVSPlayer>
     </SafeAreaView>
   );
